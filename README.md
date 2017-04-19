@@ -1,4 +1,6 @@
-## Introduction
+# Learning Spark
+
+## Chapter 1 Introduction
 
 batch applications, iterative algorithms, interactive queries, streaming.
 
@@ -19,7 +21,7 @@ for example, initial investigation of a ds might lead to the creation of a produ
 
 often it is different person or team that leads the process of productizing the work of ds, and that person is often an engineer.
 
-## getting started
+## Chapter 2 getting started
 
 spark is written in scala, and runs on the JVM.
 to run spark, all you need is an installation of java.
@@ -66,7 +68,21 @@ u'high-level APIs in Scala, Java, Python, and R, and an optimized engine that'
 
 spark automatically takes your function and ships it to the executor nodes. htus you can write code in a single driver program and automatically have parts of it run on multiple nodes.
 
-Submit a job:
+### Submit a job
+
+Python:
+```
+[vagrant@localhost spark-1.6.0-bin-hadoop2.6]$ bin/spark-submit ../learning_spark/map_square.py
+17/04/18 22:05:48 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+17/04/18 22:05:48 WARN Utils: Your hostname, localhost.localdomain resolves to a loopback address: 127.0.0.1; using 10.0.2.15 instead (on interface enp0s3)
+17/04/18 22:05:48 WARN Utils: Set SPARK_LOCAL_IP if you need to bind to another address
+1
+4
+9
+16
+```
+
+Scala:
 ```bash
 [vagrant@localhost spark-1.6.0-bin-hadoop2.6]$ bin/spark-submit \
 --class com.oreilly.learningsparkexamples.mini.scala.WordCount ~/learning-spark-examples/mini-complete-example/target/scala-2.10/learning-spark-mini-example_2.10-0.0.1.jar \
@@ -131,3 +147,40 @@ when we call a transformation on rdd, the operation is not immediately performed
 loading data into rdd is lazily evaluated in the same way transformation. when we call `sc.textFile()`, data is not loaded until necessary.
 
 in hadoop mapreduce, developers have to spend a lot of time considering how to group together operations to minimize the number of mapreduce passes. in spark, there is no substantial benefit to writing a single complex map instead of chaning together many simple operations. smaller, more managerable operationsself.
+
+### pseudo set
+
+the set property missing from rdd is uniqueness of elements. if we want only unique elements we can use the `rdd.distinct()` transformation to produce a new rdd with only distinct items.
+
+`distinct()` is expensive as it requires `shuffling` all the data over the network to ensure that we receive only one copy of each element.
+
+`intersection(other)` returns only elements in both rdds. it also removes all duplicates, including duplicates from a single rdd.
+
+### actions
+
+`reduce()` takes a function that operates on tow elements of the type in your rdd and returns a new element of the same type. e.g.
+```python
+sum = rdd.reduce(lambda x, y: x + y)
+```
+
+`countByValue()` returns a map of each unique value to its count.
+
+`foreach()` let us perform computations on each element in rdd without bring it back locally. `rdd.foreach(func)`
+
+### persistence (caching)
+
+iterative algorithms
+
+in scala and java, the default `persist()` will store the data in jvm heap as unserialized objects. in python, we always serialize the data that persist stores, so the default is stored in the jvm heap as pickled objects.
+
+off-heap caching uses tachyon (experimental).
+
+## Chapter 4 key/value pairs
+
+special operations on rdds containing key/value paris: pair rdds.
+
+accessing only the value part of pari rdd. `mapValues(func)`, which is equivalent to `map{case (x, y): (x, func(y))}`.
+
+due to datasets can have large number of keys, `reduceByKey()` is not implemented as return a value to the user program. instead it returns a new RDD consisting of each key and the reduced value for that key.
+
+every rdd has fixed number of `partitions` that determine the degree of parallelism. spark will try to inter a sensible default value based on the size of your cluster. you may want to tune the level of parallelism for better performance. example see `reducebykey_with_parallelism.py`
