@@ -184,3 +184,35 @@ accessing only the value part of pari rdd. `mapValues(func)`, which is equivalen
 due to datasets can have large number of keys, `reduceByKey()` is not implemented as return a value to the user program. instead it returns a new RDD consisting of each key and the reduced value for that key.
 
 every rdd has fixed number of `partitions` that determine the degree of parallelism. spark will try to inter a sensible default value based on the size of your cluster. you may want to tune the level of parallelism for better performance. example see `reducebykey_with_parallelism.py`
+
+### Grouping data
+
+grouping data by key. for exmaple, viewing all of a customer's orders together.
+
+if data is already keyed. `groupByKey()` will group our data using key in our rdd. on an rdd consisting of keys of type K, and values of type V, we get back rdd of type [K, Iterable[V]].
+
+`cogroup()` group two rdds sharing the same key type, K, with the respective value types V and W gives us back RDD[(K, (Iterable[V], Iterable[W]))].
+
+### join
+
+simple join is inner join. only keys that are present in both pare rdds are output.
+
+when there are multiple values for the same key in one of the inputs, the resulting rrd will have an entry for every possible pair of values with that key from the two input rrds. ==> Cartesian product between the two list of values.
+
+once we sorted the data, any subsequent call on the sorted data to `collect()` or `save()` will result in ordered data.
+
+### data partitioning
+
+in a distributed system, communication is very expensive, so laying out data to minimize network traffic can greatly improve performance.
+
+partitioning is useful only when a dataset is reused multiple times in key-oriented operations such as joins.
+
+spark does not give explicit control of which worker node each key goes to. it lets the program ensure that a set of keys will appear together on some node.
+
+`hashpartition` rdd into 100 partitions so that keys that have the same hash value modulo 100 appear on the same node.
+
+`rangepartition` rdd into sorted ranges of keys so that elements with keys in the same range appear on the same node.
+
+`partitionBy()` is a transformation, so it always returns a new RDD. rdds can never be modified once created. therefore it is important to persist and save as `userData` the result of `partitionBy()`, not the original `sequenceFile()`.
+
+the 100 passed to `partitionBy()` represents the number of partitions, which will control how many parallel tasks perform further operations on the rdd (e.g. joins). in general make this at least as large as the number of cores in your cluster.
