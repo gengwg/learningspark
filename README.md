@@ -216,3 +216,7 @@ spark does not give explicit control of which worker node each key goes to. it l
 `partitionBy()` is a transformation, so it always returns a new RDD. rdds can never be modified once created. therefore it is important to persist and save as `userData` the result of `partitionBy()`, not the original `sequenceFile()`.
 
 the 100 passed to `partitionBy()` represents the number of partitions, which will control how many parallel tasks perform further operations on the rdd (e.g. joins). in general make this at least as large as the number of cores in your cluster.
+
+## Chapter 5 loading and saving data
+
+we can use both hadoop new nad old file apis for only keyed (or paired) data, because the hadoop interfaces require key/value data. in cases where the format ignores the key, it is common to use a dummy key such as null.
